@@ -3,16 +3,148 @@
 <head>
     <meta charset="UTF-8">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <script src="backend.js"></script>
     <link rel="stylesheet" href="styles.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Bingo Game</title>
 </head>
 <body>
-    <div class="main">Enter your game code here</div>
-    <div class="header">Game Code</div>
-    <input type="text" id="cardID">
-    <button type="button" id="getCardID">Get Card</button>
+    <div class="screen">
+    <div class="main">Enter your game code here:</div>
+        <div class="header">Game Code</div>
+        <input type="text" id="gameCode" placeholder="Enter the Game Code">
+        <button type="button" class="enterCode">Get Card</button>
+    </div>
 
+    <div class="bingo">
+        <div class="options">
+            <button type="button" id="changeCode">Change Code</button>
+            <button type="button" id="openDashboard">Open DashBoard</button>
+        </div>
+        <div class="bingoText">BINGO</div>
+        <table class = "slot">
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+        </table>
+            <div class="cardButtons">
+                <button type="button" id="checkCard">Check Card</button>
+                <button type="button" class="enterCode">New Card</button>
+            </div> 
+     </div>
+     <script>
+        $(document).ready(function () { 
+            $(".bingo").hide();
+            $(".screen").show();
+
+            let playcard_token;
+            let code;
+
+            $(".enterCode").click(function () { 
+                code = $("#gameCode").val(); 
+                checkCode(code).done(function(data){
+                    if(data == 0){
+                        alert("Game does not exist");
+                        $("#gameCode").val(''); 
+                        $(".bingo").hide();
+                        $(".screen").show();
+                    }else{
+                        $(".bingo").show();
+                        $(".screen").hide();
+                        data = JSON.parse(data);
+                        playcard_token = data.playcard_token;
+                        var slots = document.querySelectorAll('.slot td');
+                        var pos = 0;
+                        try{
+                            var cards = [
+                                data.card.B,
+                                data.card.I,
+                                data.card.N,
+                                data.card.G,
+                                data.card.O
+                            ]
+                            for (var i = 0; i < 5; i++) {
+                                for(var j = 0; j < 5; j++){
+                                    slots[pos].innerHTML = cards[j][i]; 
+                                    pos++;
+                                }
+                            }
+                        }catch(e){
+                            alert("Error in parsing json file");
+                        }
+                    }
+                });
+            }); 
+
+            $("#checkCard").click(function(){
+                checkCard(playcard_token).done(function(data){
+                        if(data == 1){
+                            alert("That's a Bingo!")
+                        }else{
+                            alert("Not a Winning Card")
+                        }
+                });
+                
+            });
+
+            $("#openDashboard").click(function(){
+                window.open(`http://www.hyeumine.com/bingodashboard.php?bcode=${code}`, "_blank");
+            });
+
+            $("#changeCode").click(function(){
+                $(".bingo").hide();
+                $(".screen").show();
+                $("#gameCode").val('');
+            });
+
+        }); 
+
+
+        function checkCode(code) {
+            return $.ajax({
+                url:`http://www.hyeumine.com/getcard.php?bcode=${code}`,
+                method:"GET"
+            });
+        }
+
+        function checkCard(token){
+            return $.ajax({
+                url: `http://www.hyeumine.com/checkwin.php?playcard_token=${token}`,
+                method:"GET"
+            });
+        }
+     </script>
+    
 </body>
 </html>
